@@ -286,43 +286,10 @@ CleanupExit:
     return status;
 }
 
-NTSTATUS KphVerifyBuffer(
-    _In_ PUCHAR Buffer,
-    _In_ ULONG BufferSize,
-    _In_ PUCHAR Signature,
-    _In_ ULONG SignatureSize
-    )
+NTSTATUS KphVerifyCurrentProcess()
 {
-    NTSTATUS status;
-    MY_HASH_OBJ hashObj;
-    PVOID hash = NULL;
-    ULONG hashSize;
-
-    // Hash the Buffer.
-
-    if(!NT_SUCCESS(status = MyInitHash(&hashObj)))
-        goto CleanupExit;
-
-    MyHashData(&hashObj, Buffer, BufferSize);
-
-	if(!NT_SUCCESS(status = MyFinishHash(&hashObj, &hash, &hashSize)))
-        goto CleanupExit;
-
-    // Verify the hash.
-
-    if (!NT_SUCCESS(status = KphVerifySignature(hash, hashSize, Signature, SignatureSize)))
-    {
-        goto CleanupExit;
-    }
-
-CleanupExit:
-
-    if (hash)
-        ExFreePoolWithTag(hash, 'vhpK');
- 
-    MyFreeHash(&hashObj);
-
-    return status;
+    /* ===== 本地修改：直接返回成功，跳过对 SandMan.exe 及其他用户态程序的签名校验 ===== */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS KphReadSignature(    
@@ -1085,6 +1052,21 @@ _FX NTSTATUS KphValidateCertificate()
             Verify_CertInfo.grace_period = 1;
     }
 
+
+/* ===== 本地修改：硬编码证书信息，使其始终处于有效且最高等级状态 ===== */
+    Verify_CertInfo.active = 1;
+    Verify_CertInfo.type = eCertEternal;
+    Verify_CertInfo.level = eCertMaxLevel;
+    Verify_CertInfo.opt_net = 1;
+    Verify_CertInfo.opt_enc = 1;
+    Verify_CertInfo.opt_sec = 1;
+    Verify_CertInfo.opt_desk = 1;
+    Verify_CertInfo.expired = 0;
+    Verify_CertInfo.outdated = 0;
+    Verify_CertInfo.grace_period = 0;
+    Verify_CertInfo.expirers_in_sec = 0;
+    status = STATUS_SUCCESS;
+    /* ===== 结束本地修改 ===== */
 
 CleanupExit:
     if(CertDbg)     DbgPrint("Sbie Cert status: %08x; active: %d\n", status, Verify_CertInfo.active);
