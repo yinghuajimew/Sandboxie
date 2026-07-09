@@ -3582,46 +3582,9 @@ bool CSandMan::SetCertificate(const QByteArray& Certificate)
 
 bool CSandMan::CheckCertificate(QWidget* pWidget, int iType)
 {
-	QString Message;
-	if (iType == 1 || iType == 2)
-	{
-		if (iType == 1 ? g_CertInfo.opt_enc : g_CertInfo.opt_net)
-			return true;
-
-		Message = tr("The selected feature requires an <b>advanced</b> supporter certificate.");
-		if (iType == 2 && CERT_IS_TYPE(g_CertInfo, eCertPatreon))
-			Message.append(tr("<br />you need to be on the Great Patreon level or higher to unlock this feature."));
-		else if (g_CertInfo.active)
-			Message.append(tr("<br /><a href=\"https://sandboxie-plus.com/go.php?to=sbie-upgrade-cert\">Upgrade your Certificate</a> to unlock advanced features."));
-		else
-			Message.append(tr("<br /><a href=\"https://sandboxie-plus.com/go.php?to=sbie-get-cert\">Become a project supporter</a>, and receive a <a href=\"https://sandboxie-plus.com/go.php?to=sbie-cert\">supporter certificate</a>"));
-	}
-	else
-	{
-		if (iType == -1 ? g_CertInfo.active : g_CertInfo.opt_sec)
-			return true;
-
-		if(iType == 2)
-			Message = tr("The selected feature set is only available to project supporters.<br />"
-				"<a href=\"https://sandboxie-plus.com/go.php?to=sbie-get-cert\">Become a project supporter</a>, and receive a <a href=\"https://sandboxie-plus.com/go.php?to=sbie-cert\">supporter certificate</a>");
-		else
-			Message = tr("The selected feature set is only available to project supporters. Processes started in a box with this feature set enabled without a supporter certificate will be terminated after 5 minutes.<br />"
-				"<a href=\"https://sandboxie-plus.com/go.php?to=sbie-get-cert\">Become a project supporter</a>, and receive a <a href=\"https://sandboxie-plus.com/go.php?to=sbie-cert\">supporter certificate</a>");
-	}
-
-	QMessageBox msgBox(pWidget);
-	msgBox.setTextFormat(Qt::RichText);
-	msgBox.setIcon(QMessageBox::Information);
-	msgBox.setWindowTitle("Sandboxie-Plus");
-	msgBox.setText(Message);
-	msgBox.setStandardButtons(QMessageBox::Ok);
-	msgBox.exec();
-	/*msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-	if (msgBox.exec() == QDialogButtonBox::Yes) {
-		OpenUrl(QUrl("https://sandboxie-plus.com/go.php?to=sbie-get-cert"));
-	}*/
-
-	return false;
+	// 本地修改：强制认为所有特性都已授权，直接返回 true，跳过购买/升级弹窗
+	(void)pWidget; (void)iType;
+	return true;
 }
 
 void InitCertSlot();
