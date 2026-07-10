@@ -354,54 +354,6 @@ CleanupExit:
     return status;
 }
 
-NTSTATUS KphVerifyCurrentProcess()
-{
-    NTSTATUS status;
-    PUNICODE_STRING processFileName = NULL;
-    PUNICODE_STRING signatureFileName = NULL;
-    ULONG signatureSize = 0;
-    PUCHAR signature = NULL;
-    
-    if (!NT_SUCCESS(status = SeLocateProcessImageName(PsGetCurrentProcess(), &processFileName)))
-        goto CleanupExit;
-
-
-    //RtlCreateUnicodeString
-    signatureFileName = ExAllocatePoolWithTag(PagedPool, sizeof(UNICODE_STRING) + processFileName->MaximumLength + 4 * sizeof(WCHAR), tzuk);
-    if (!signatureFileName) 
-    {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto CleanupExit;
-    }
-    signatureFileName->Buffer = (PWCH)(((PUCHAR)signatureFileName) + sizeof(UNICODE_STRING));
-    signatureFileName->MaximumLength = processFileName->MaximumLength + 5 * sizeof(WCHAR);
-
-    //RtlCopyUnicodeString
-    wcscpy(signatureFileName->Buffer, processFileName->Buffer);
-    signatureFileName->Length = processFileName->Length;
-
-    //RtlUnicodeStringCat
-    wcscat(signatureFileName->Buffer, L".sig");
-    signatureFileName->Length += 4 * sizeof(WCHAR);
-
-
-    if (!NT_SUCCESS(status = KphReadSignature(signatureFileName, &signature, &signatureSize)))
-        goto CleanupExit;
-
-    status = KphVerifyFile(processFileName, signature, signatureSize); 
-
-
-CleanupExit:
-    if (signature)
-        ExFreePoolWithTag(signature, tzuk);
-    if (processFileName)
-        ExFreePool(processFileName);
-    if (signatureFileName)
-        ExFreePoolWithTag(signatureFileName, tzuk);
-
-    return status;
-}
-
 
 //---------------------------------------------------------------------------
 
